@@ -2,7 +2,7 @@
 
 Basically, the *old fashioned* camera API is used here. Pictures taken are stored in a directory only accessible within the app.
 
-![img.png](img/img.png)
+<img src="img/img.png" style="max-width: 200px;" />
 
 ## How to use the Camera
 
