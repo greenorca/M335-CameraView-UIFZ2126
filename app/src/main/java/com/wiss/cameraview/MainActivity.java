@@ -6,6 +6,8 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
@@ -32,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -49,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     ActivityResultLauncher<Intent> activityResultLauncher;
     private ListView myListView;
+    private ArrayAdapter<MyPictureFile> pictureFileArrayAdapter;
 
 
     @Override
@@ -82,12 +86,12 @@ public class MainActivity extends AppCompatActivity {
 
         myListView = findViewById(R.id.listView);
         myListView.setOnItemClickListener((v,adapter, index,id)->{
-            File selectedFile = (File)v.getItemAtPosition(index);
-            if (selectedFile==null)
+            MyPictureFile selection = (MyPictureFile)v.getItemAtPosition(index);
+            if (selection==null)
                 return;
             Uri uri = getUriForFile(MainActivity.this,
                     getPackageName()+".fileprovider",
-                    selectedFile
+                    selection.getFile()
                     );
             imageView.setImageURI(uri);
                 });
@@ -98,19 +102,19 @@ public class MainActivity extends AppCompatActivity {
 
         File dir = context.getFilesDir();
         File[] files = dir.listFiles();
-        List<File> imgFiles = new ArrayList<>();
+        List<MyPictureFile> imgFiles = new ArrayList<>();
         for (File f : files){
 
             if (f.getName().endsWith("my_images")){
                 for ( File img : f.listFiles()){
-                    imgFiles.add(img);
+                    imgFiles.add(new MyPictureFile(img));
                 }
             }
 
         }
-        ArrayAdapter<File> adi = new ArrayAdapter<>(this, SINGLE_CHOICE, imgFiles);
+        pictureFileArrayAdapter = new ArrayAdapter<>(this, SINGLE_CHOICE, imgFiles);
         myListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        myListView.setAdapter(adi);
+        myListView.setAdapter(pictureFileArrayAdapter);
 
     }
 
@@ -126,13 +130,14 @@ public class MainActivity extends AppCompatActivity {
         try {
             imagefolder.mkdirs();
             String fileName = (new Date().toString()+".jpg").replaceAll(" ","-");
-            File file = new File(imagefolder, "captured_image_"+fileName);
+            File file = new File(imagefolder, "IMG_"+fileName);
             FileOutputStream stream = new FileOutputStream(file);
             image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             stream.flush();
             stream.close();
             contentUri = getUriForFile(context,
                     context.getPackageName()+".fileprovider", file);
+            pictureFileArrayAdapter.add(new MyPictureFile(file));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
