@@ -1,5 +1,7 @@
 package com.wiss.cameraview;
 
+import static androidx.core.content.FileProvider.getUriForFile;
+
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -14,17 +16,25 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,7 +44,11 @@ public class MainActivity extends AppCompatActivity {
 
     ImageView imageView;
 
+    private static final int SINGLE_CHOICE = android.R.layout.simple_list_item_single_choice;
+
+
     ActivityResultLauncher<Intent> activityResultLauncher;
+    private ListView myListView;
 
 
     @Override
@@ -56,16 +70,48 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onActivityResult(ActivityResult result) {
                 Bundle extras = result.getData().getExtras();
-                Uri imageUri;
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
                 WeakReference<Bitmap> result_1 = new WeakReference<>(Bitmap.createScaledBitmap(imageBitmap,
-                                imageBitmap.getWidth(), imageBitmap.getHeight(), false).
-                        copy(Bitmap.Config.RGB_565, true));
+                            imageBitmap.getWidth(), imageBitmap.getHeight(), false).
+                            copy(Bitmap.Config.RGB_565, true));
                 Bitmap bm = result_1.get();
-                imageUri = saveImage(bm, MainActivity.this);
+                Uri imageUri = saveImage(bm, MainActivity.this);
                 imageView.setImageURI(imageUri);
             }
         });
+
+        myListView = findViewById(R.id.listView);
+        myListView.setOnItemClickListener((v,adapter, index,id)->{
+            File selectedFile = (File)v.getItemAtPosition(index);
+            if (selectedFile==null)
+                return;
+            Uri uri = getUriForFile(MainActivity.this,
+                    getPackageName()+".fileprovider",
+                    selectedFile
+                    );
+            imageView.setImageURI(uri);
+                });
+        listPictureFiles(MainActivity.this);
+    }
+
+    private void listPictureFiles(Context context){
+
+        File dir = context.getFilesDir();
+        File[] files = dir.listFiles();
+        List<File> imgFiles = new ArrayList<>();
+        for (File f : files){
+
+            if (f.getName().endsWith("my_images")){
+                for ( File img : f.listFiles()){
+                    imgFiles.add(img);
+                }
+            }
+
+        }
+        ArrayAdapter<File> adi = new ArrayAdapter<>(this, SINGLE_CHOICE, imgFiles);
+        myListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        myListView.setAdapter(adi);
+
     }
 
     private void onActivityResult(Intent data) {
@@ -75,23 +121,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Uri saveImage(Bitmap image, Context context) {
-        File imagefolder = new File(context.getCacheDir(), "images");
-        Uri uri = null;
+        File imagefolder = new File(context.getFilesDir(), "my_images");
+        Uri contentUri = null;
         try {
             imagefolder.mkdirs();
-            File file = new File(imagefolder, "captured_image.jpg");
+            String fileName = (new Date().toString()+".jpg").replaceAll(" ","-");
+            File file = new File(imagefolder, "captured_image_"+fileName);
             FileOutputStream stream = new FileOutputStream(file);
             image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             stream.flush();
             stream.close();
-            uri = FileProvider.getUriForFile(context.getApplicationContext(), "com.allcodingtutorial.camerafull1" + ".provider", file);
+            contentUri = getUriForFile(context,
+                    context.getPackageName()+".fileprovider", file);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return uri;
+        return contentUri;
     }
-
 }
 
