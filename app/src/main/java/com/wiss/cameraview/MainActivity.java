@@ -2,39 +2,30 @@ package com.wiss.cameraview;
 
 import static androidx.core.content.FileProvider.getUriForFile;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ListView;
+
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.hardware.Camera;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
-import android.widget.Adapter;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
